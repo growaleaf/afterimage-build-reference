@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Afterimage — Build &amp; Damage Mechanics Reference</title>
+<meta name="description" content="A disclosed, single-source damage formula explainer plus the four named build archetypes for Afterimage, in one place — not an official calculator.">
+<style>
+  :root {
+    --bg: #15171c; --panel: #1d2026; --panel-border: #333845;
+    --ink: #e6e9ef; --ink-dim: #9aa3b2; --accent: #6fa8dc; --accent-bright: #a9cdf0;
+    --field-bg: #11131700; --warn: #c2874f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  main { max-width: 1160px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; border-bottom: 1px solid var(--panel-border); padding-bottom: 16px; }
+  .sub { color: var(--ink-dim); font-size: 0.93rem; margin: 0 0 20px; }
+  .callout {
+    font-size: 0.85rem; color: var(--ink-dim); background: #191b20;
+    border: 1px solid var(--panel-border); border-radius: 4px; padding: 12px 14px; margin: 0 0 20px;
+  }
+  .callout strong { color: var(--ink); }
+  .callout.warn { border-color: var(--warn); }
+  section {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 6px;
+    padding: 20px 22px; margin-bottom: 20px;
+  }
+  section h2 { font-size: 1.1rem; margin: 0 0 6px; }
+  section h3 { font-size: 0.95rem; margin: 18px 0 6px; color: var(--accent-bright); }
+  .section-note { color: var(--ink-dim); font-size: 0.85rem; margin: 0 0 16px; }
+  .finding { margin-bottom: 14px; }
+  .finding h3 { margin-bottom: 4px; }
+  .finding p { margin: 4px 0; font-size: 0.88rem; }
+  .finding .note { color: var(--ink-dim); font-size: 0.82rem; }
+  .formula {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9rem;
+    background: #191b20; border: 1px solid var(--panel-border); border-radius: 4px;
+    padding: 10px 12px; display: inline-block; margin: 4px 0;
+  }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; align-items: center; }
+  .controls label { font-size: 0.78rem; color: var(--ink-dim); display: flex; align-items: center; gap: 6px; }
+  .controls select {
+    background: #191b20; color: var(--ink); border: 1px solid var(--panel-border);
+    border-radius: 4px; padding: 5px 8px; font-size: 0.82rem;
+  }
+  .row-count { font-size: 0.78rem; color: var(--ink-dim); margin-left: auto; }
+  .build-card {
+    border: 1px solid var(--panel-border); border-radius: 6px; padding: 14px 16px;
+    margin-bottom: 12px; background: #191b20;
+  }
+  .build-card h3 { margin: 0 0 8px; }
+  .build-card .gearline { font-size: 0.85rem; margin: 3px 0; }
+  .build-card .gearline strong { color: var(--ink-dim); font-weight: 600; min-width: 90px; display: inline-block; }
+  .build-card .notes { color: var(--ink-dim); font-size: 0.8rem; margin-top: 8px; }
+  .sources-section { font-size: 0.82rem; color: var(--ink-dim); }
+  .sources-section h2 { font-size: 1.05rem; }
+  .sources-section a { color: var(--accent-bright); }
+  .self-test { font-size: 0.75rem; color: var(--ink-dim); margin-top: 10px; }
+  .self-test.ok { color: var(--accent-bright); }
+  .self-test.bad { color: var(--warn); }
+  footer { max-width: 1160px; margin: 0 auto; padding: 0 20px 40px; font-size: 0.8rem; color: var(--ink-dim); }
+  footer a { color: var(--accent-bright); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Afterimage — Build &amp; Damage Mechanics Reference</h1>
+  <p class="sub">For
+  <a href="https://store.steampowered.com/app/1701520/Afterimage/" target="_blank" rel="noopener">Afterimage</a>
+  (Aurogon Shanghai, 2024): one player's reverse-engineered damage formula, and the four named
+  build archetypes from a guide site, in one place — because no developer-published stat table or
+  mechanics explainer exists anywhere for this game. This is a reference, not a calculator and not
+  an official formula. Nothing here is saved or sent anywhere — it runs entirely in your browser.</p>
+
+  <div class="callout warn" id="staleNotice"></div>
+
+  <section>
+    <h2>Damage Mechanics Explainer</h2>
+    <p class="section-note">
+      Source: Steam Community post by <strong id="damageAuthor"></strong>, dated
+      <strong id="damageDate"></strong>. <strong id="damageSourceInline"></strong>
+    </p>
+    <div id="findingsList"></div>
+    <h3>Recommended critical chance : critical damage ratio</h3>
+    <p id="critRatioText"></p>
+  </section>
+
+  <section>
+    <h2>Build Browser — four named archetypes</h2>
+    <p class="section-note">Weapon, armor, and accessory combos named by the source guide, with no
+    numeric rationale stated beyond each item's own listed stats. Filter by focus below.</p>
+    <div class="controls">
+      <label>Focus
+        <select id="focusFilter">
+          <option value="">All</option>
+        </select>
+      </label>
+      <span class="row-count" id="buildCount"></span>
+    </div>
+    <div id="buildList"></div>
+  </section>
+
+  <section class="sources-section">
+    <h2>Sources &amp; disclosed sourcing notes</h2>
+    <p>Fetched and read directly <span id="fetchedDate"></span>.</p>
+    <ul id="sourceList"></ul>
+    <p><strong>Disclosed limit — damage formula:</strong> the Damage Mechanics Explainer above is
+    reproduced from a single Steam Community forum post. No second source confirming this formula
+    was found. It is labeled <code id="sourceLabelInline"></code> rather than presented as an
+    official or confirmed mechanic.</p>
+    <p><strong>Disclosed note — build count:</strong> the source guide names four build
+    archetypes (Critical Damage, Defense, Magic, Damage Output), not three — all four are shown
+    above.</p>
+    <p><strong>Disclosed limit — build rationale:</strong> the source guide does not explain why
+    each gear combo works beyond listing the gear's own stats. No separate numeric build
+    calculator exists on this page; it is a browsable record of what the source names, not a
+    recommendation engine.</p>
+    <p class="self-test" id="selfTest">running self-test…</p>
+  </section>
+</main>
+
+<footer>
+  Fan-made reference tool, unaffiliated with Aurogon Shanghai. No account, no game files
+  extracted, no cheats — every fact above is reproduced from text already published on public
+  guide/forum sites. No account, no server, no data leaves your browser.
+</footer>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  "use strict";
+  var D = window.AFTERIMAGE_DATA;
+  var focusFilter = "";
+
+  function textNode(tag, cls, text) {
+    var el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (text !== undefined && text !== null) el.textContent = text;
+    return el;
+  }
+
+  function renderFindings() {
+    var list = document.getElementById("findingsList");
+    list.innerHTML = "";
+    D.DAMAGE_MECHANICS.findings.forEach(function (f) {
+      var div = document.createElement("div");
+      div.className = "finding";
+      div.appendChild(textNode("h3", null, f.heading));
+      if (f.heading.indexOf("formula") !== -1) {
+        div.appendChild(textNode("div", "formula", f.text));
+      } else {
+        div.appendChild(textNode("p", null, f.text));
+      }
+      if (f.note) div.appendChild(textNode("p", "note", f.note));
+      list.appendChild(div);
+    });
+  }
+
+  function populateFocusOptions() {
+    var select = document.getElementById("focusFilter");
+    var seen = {};
+    D.BUILDS.forEach(function (b) {
+      if (!seen[b.focus]) {
+        seen[b.focus] = true;
+        var opt = document.createElement("option");
+        opt.value = b.focus;
+        opt.textContent = b.focus;
+        select.appendChild(opt);
+      }
+    });
+  }
+
+  function gearLine(label, value) {
+    var p = document.createElement("p");
+    p.className = "gearline";
+    p.appendChild(textNode("strong", null, label + ":"));
+    p.appendChild(document.createTextNode(" " + value));
+    return p;
+  }
+
+  function renderBuilds() {
+    var rows = D.BUILDS.filter(function (b) {
+      return !focusFilter || b.focus === focusFilter;
+    });
+    var list = document.getElementById("buildList");
+    list.innerHTML = "";
+    rows.forEach(function (b) {
+      var card = document.createElement("div");
+      card.className = "build-card";
+      card.setAttribute("data-focus", b.focus);
+      card.appendChild(textNode("h3", null, b.focus + " build"));
+      card.appendChild(gearLine("Weapon", b.weapon));
+      card.appendChild(gearLine("Subweapon", b.subweapon));
+      card.appendChild(gearLine("Spellbook", b.spellbook));
+      card.appendChild(gearLine("Helmet", b.helmet));
+      card.appendChild(gearLine("Armor", b.armor));
+      card.appendChild(gearLine("Boots", b.boots));
+      card.appendChild(gearLine("Accessories", b.accessories.join(", ")));
+      card.appendChild(textNode("p", "notes", b.notes));
+      list.appendChild(card);
+    });
+    document.getElementById("buildCount").textContent = rows.length + " of " + D.BUILDS.length + " builds";
+  }
+
+  document.getElementById("focusFilter").addEventListener("change", function (e) {
+    focusFilter = e.target.value;
+    renderBuilds();
+  });
+
+  var staleNotice = document.getElementById("staleNotice");
+  staleNotice.appendChild(textNode("strong", null, "Sourcing notice: "));
+  staleNotice.appendChild(document.createTextNode(D.DAMAGE_MECHANICS.staleWarning));
+
+  document.getElementById("damageAuthor").textContent = D.DAMAGE_MECHANICS.author;
+  document.getElementById("damageDate").textContent = D.DAMAGE_MECHANICS.postDate;
+  document.getElementById("damageSourceInline").textContent =
+    "Labeled " + D.DAMAGE_SOURCE_LABEL + " — not an official or confirmed formula.";
+  document.getElementById("critRatioText").textContent = D.DAMAGE_MECHANICS.critRatio.text;
+  document.getElementById("sourceLabelInline").textContent = D.DAMAGE_SOURCE_LABEL;
+
+  document.getElementById("fetchedDate").textContent = D.FETCHED;
+  var srcList = document.getElementById("sourceList");
+  D.SOURCES.forEach(function (s) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = s.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = s.name;
+    li.appendChild(a);
+    srcList.appendChild(li);
+  });
+
+  renderFindings();
+  populateFocusOptions();
+  renderBuilds();
+
+  (function selfTest() {
+    var el = document.getElementById("selfTest");
+    var pass = 0, total = 6;
+    if (D.BUILDS.length === 4) pass++;
+    if (D.BUILDS.every(function (b) { return b.accessories.length > 0 && b.weapon.length > 0; })) pass++;
+    if (D.DAMAGE_MECHANICS.findings.length > 0) pass++;
+    if (D.DAMAGE_SOURCE_LABEL.toLowerCase().indexOf("unconfirmed") !== -1) pass++;
+    var bannedWords = ["best", "optimal", "strongest", "guaranteed", "approved", "certified", "compliant", "safe", "s-tier", "meta"];
+    var visibleText = (document.querySelector("main").textContent + " " + document.querySelector("footer").textContent).toLowerCase();
+    if (bannedWords.every(function (bw) { return !new RegExp("\\b" + bw.replace("-", "\\-") + "\\b").test(visibleText); })) pass++;
+    if (document.getElementById("buildList").children.length === 4) pass++;
+    el.textContent = "self-test: " + pass + "/" + total + " known-answer scenarios passed";
+    el.className = "self-test " + (pass === total ? "ok" : "bad");
+  })();
+})();
+</script>
+</body>
+</html>
